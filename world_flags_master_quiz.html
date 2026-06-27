@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>World Flags Master Quiz</title>
+<style>
+  :root{
+    --bg1:#0f172a;
+    --bg2:#1e3a8a;
+    --card:rgba(255,255,255,.94);
+    --text:#0f172a;
+    --muted:#64748b;
+    --accent:#2563eb;
+    --accent2:#7c3aed;
+    --good:#16a34a;
+    --bad:#dc2626;
+    --warn:#f59e0b;
+    --soft:#e2e8f0;
+    --shadow:0 24px 70px rgba(2,6,23,.35);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(circle at top left, #38bdf8 0, transparent 32%),
+      radial-gradient(circle at bottom right, #a78bfa 0, transparent 30%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:18px;
+  }
+  .app{
+    width:100%;
+    max-width:860px;
+    background:var(--card);
+    border-radius:30px;
+    box-shadow:var(--shadow);
+    padding:24px;
+    backdrop-filter:blur(12px);
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  h1{
+    margin:0;
+    font-size:clamp(1.7rem,5vw,2.7rem);
+    letter-spacing:-.04em;
+  }
+  .subtitle{color:var(--muted);margin-top:6px;max-width:520px}
+  .badge{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:white;
+    border-radius:999px;
+    padding:9px 13px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  .panel{
+    background:white;
+    border:1px solid var(--soft);
+    border-radius:22px;
+    padding:18px;
+  }
+  .setup{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:16px;
+  }
+  label{
+    font-size:.82rem;
+    color:var(--muted);
+    font-weight:800;
+    display:block;
+    margin-bottom:6px;
+  }
+  select, input{
+    width:100%;
+    border:1px solid var(--soft);
+    border-radius:14px;
+    padding:12px;
+    font-size:1rem;
+    background:#f8fafc;
+    color:var(--text);
+  }
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .stat{
+    background:#f8fafc;
+    border:1px solid var(--soft);
+    border-radius:18px;
+    padding:11px;
+    text-align:center;
+  }
+  .stat b{display:block;font-size:1.1rem}
+  .stat span{font-size:.77rem;color:var(--muted);font-weight:750}
+  .progress{
+    height:11px;
+    background:#e5e7eb;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    transition:width .25s ease;
+  }
+  .flag-card{
+    text-align:center;
+    border-radius:26px;
+    background:linear-gradient(180deg,#f8fafc,#eef2ff);
+    border:1px solid var(--soft);
+    padding:24px 12px;
+    margin-bottom:16px;
+  }
+  .flag{
+    font-size:clamp(86px,25vw,175px);
+    line-height:1;
+    filter:drop-shadow(0 8px 10px rgba(15,23,42,.13));
+  }
+  .hint{
+    color:var(--muted);
+    font-weight:750;
+    margin-top:12px;
+  }
+  .choices{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  button{
+    border:0;
+    border-radius:16px;
+    padding:14px 16px;
+    font-size:1rem;
+    font-weight:850;
+    cursor:pointer;
+    transition:transform .06s ease,opacity .2s ease,filter .2s ease;
+  }
+  button:hover{transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  .choice{
+    background:#e2e8f0;
+    color:#0f172a;
+    min-height:58px;
+  }
+  .choice.correct{
+    background:#dcfce7;
+    color:var(--good);
+    outline:3px solid rgba(22,163,74,.2);
+  }
+  .choice.wrong{
+    background:#fee2e2;
+    color:var(--bad);
+    outline:3px solid rgba(220,38,38,.15);
+  }
+  .controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:18px;
+  }
+  .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white}
+  .dark{background:#0f172a;color:white}
+  .ghost{background:#e2e8f0;color:#0f172a}
+  .danger{background:#fee2e2;color:var(--bad)}
+  #feedback{
+    min-height:42px;
+    margin-top:14px;
+    font-weight:850;
+    font-size:1.05rem;
+  }
+  .good{color:var(--good)}
+  .bad{color:var(--bad)}
+  .warn{color:var(--warn)}
+  .small{font-size:.88rem;color:var(--muted);font-weight:700;margin-top:4px}
+  .hidden{display:none!important}
+  .review{
+    margin-top:16px;
+    max-height:260px;
+    overflow:auto;
+    border-top:1px solid var(--soft);
+    padding-top:12px;
+  }
+  .review-row{
+    display:grid;
+    grid-template-columns:48px 1fr 1fr;
+    gap:10px;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid #f1f5f9;
+    font-size:.95rem;
+  }
+  .footer-note{
+    color:var(--muted);
+    font-size:.82rem;
+    margin-top:14px;
+  }
+  @media(max-width:760px){
+    body{padding:10px;align-items:flex-start}
+    .app{border-radius:22px;padding:16px;margin-top:8px}
+    .setup{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:1fr 1fr 1fr}
+    .choices{grid-template-columns:1fr}
+    .review-row{grid-template-columns:42px 1fr}
+    .review-row .answer{grid-column:2}
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div>
+      <h1>🌍 World Flags Master Quiz</h1>
+      <div class="subtitle">A polished, self-contained flag quiz. Works offline in one HTML file and saves your best score on the device.</div>
+    </div>
+    <div class="badge">No internet needed</div>
+  </header>
+
+  <section class="panel">
+    <div class="setup">
+      <div>
+        <label for="modeSelect">Quiz length</label>
+        <select id="modeSelect">
+          <option value="10">10 questions</option>
+          <option value="20">20 questions</option>
+          <option value="50">50 questions</option>
+          <option value="endless">Endless</option>
+        </select>
+      </div>
+      <div>
+        <label for="difficultySelect">Difficulty</label>
+        <select id="difficultySelect">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
+          <option value="expert">Expert</option>
+        </select>
+      </div>
+      <div>
+        <label for="regionSelect">Region</label>
+        <select id="regionSelect">
+          <option value="All">All regions</option>
+          <option value="Africa">Africa</option>
+          <option value="Asia">Asia</option>
+          <option value="Europe">Europe</option>
+          <option value="North America">North America</option>
+          <option value="South America">South America</option>
+          <option value="Oceania">Oceania</option>
+        </select>
+      </div>
+      <div>
+        <label for="timerSelect">Timer</label>
+        <select id="timerSelect">
+          <option value="off">Off</option>
+          <option value="15">15 sec</option>
+          <option value="10">10 sec</option>
+          <option value="5">5 sec</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="qnum">1</b><span>Question</span></div>
+      <div class="stat"><b id="score">0</b><span>Score</span></div>
+      <div class="stat"><b id="streak">0</b><span>Streak</span></div>
+      <div class="stat"><b id="accuracy">0%</b><span>Accuracy</span></div>
+      <div class="stat"><b id="best">0</b><span>Best</span></div>
+    </div>
+
+    <div class="progress"><div id="bar" class="bar"></div></div>
+
+    <div class="flag-card">
+      <div id="flag" class="flag">🇺🇳</div>
+      <div id="hint" class="hint">Select the country</div>
+    </div>
+
+    <div id="choices" class="choices"></div>
+    <div id="feedback"></div>
+
+    <div class="controls">
+      <button id="nextBtn" class="primary hidden">Next</button>
+      <button id="startBtn" class="dark">Start / Restart</button>
+      <button id="hintBtn" class="ghost">Hint</button>
+      <button id="clearBtn" class="danger">Clear best</button>
+    </div>
+
+    <div id="review" class="review hidden"></div>
+    <div class="footer-note">Note: this version uses flag emoji, so appearance can vary slightly by device. For iPhone testing, hosting it with GitHub Pages/Netlify gives the smoothest experience.</div>
+  </section>
+</main>
+
+<script>
+const DATA = [
+["Afghanistan","🇦🇫","Asia","hard"],["Albania","🇦🇱","Europe","medium"],["Algeria","🇩🇿","Africa","medium"],["Andorra","🇦🇩","Europe","hard"],["Angola","🇦🇴","Africa","hard"],["Antigua and Barbuda","🇦🇬","North America","hard"],["Argentina","🇦🇷","South America","easy"],["Armenia","🇦🇲","Asia","hard"],["Australia","🇦🇺","Oceania","easy"],["Austria","🇦🇹","Europe","easy"],["Azerbaijan","🇦🇿","Asia","medium"],
+["Bahamas","🇧🇸","North America","medium"],["Bahrain","🇧🇭","Asia","medium"],["Bangladesh","🇧🇩","Asia","medium"],["Barbados","🇧🇧","North America","hard"],["Belarus","🇧🇾","Europe","medium"],["Belgium","🇧🇪","Europe","easy"],["Belize","🇧🇿","North America","hard"],["Benin","🇧🇯","Africa","hard"],["Bhutan","🇧🇹","Asia","medium"],["Bolivia","🇧🇴","South America","medium"],["Bosnia and Herzegovina","🇧🇦","Europe","medium"],["Botswana","🇧🇼","Africa","medium"],["Brazil","🇧🇷","South America","easy"],["Brunei","🇧🇳","Asia","hard"],["Bulgaria","🇧🇬","Europe","medium"],["Burkina Faso","🇧🇫","Africa","hard"],["Burundi","🇧🇮","Africa","hard"],
+["Cambodia","🇰🇭","Asia","medium"],["Cameroon","🇨🇲","Africa","medium"],["Canada","🇨🇦","North America","easy"],["Cape Verde","🇨🇻","Africa","hard"],["Central African Republic","🇨🇫","Africa","hard"],["Chad","🇹🇩","Africa","hard"],["Chile","🇨🇱","South America","easy"],["China","🇨🇳","Asia","easy"],["Colombia","🇨🇴","South America","easy"],["Comoros","🇰🇲","Africa","hard"],["Costa Rica","🇨🇷","North America","medium"],["Croatia","🇭🇷","Europe","medium"],["Cuba","🇨🇺","North America","medium"],["Cyprus","🇨🇾","Europe","medium"],["Czechia","🇨🇿","Europe","medium"],
+["Denmark","🇩🇰","Europe","easy"],["Djibouti","🇩🇯","Africa","hard"],["Dominica","🇩🇲","North America","hard"],["Dominican Republic","🇩🇴","North America","medium"],
+["Ecuador","🇪🇨","South America","medium"],["Egypt","🇪🇬","Africa","easy"],["El Salvador","🇸🇻","North America","medium"],["Equatorial Guinea","🇬🇶","Africa","hard"],["Eritrea","🇪🇷","Africa","hard"],["Estonia","🇪🇪","Europe","medium"],["Eswatini","🇸🇿","Africa","hard"],["Ethiopia","🇪🇹","Africa","medium"],
+["Fiji","🇫🇯","Oceania","medium"],["Finland","🇫🇮","Europe","easy"],["France","🇫🇷","Europe","easy"],
+["Gabon","🇬🇦","Africa","hard"],["Gambia","🇬🇲","Africa","hard"],["Georgia","🇬🇪","Asia","medium"],["Germany","🇩🇪","Europe","easy"],["Ghana","🇬🇭","Africa","medium"],["Greece","🇬🇷","Europe","easy"],["Grenada","🇬🇩","North America","hard"],["Guatemala","🇬🇹","North America","medium"],["Guinea","🇬🇳","Africa","hard"],["Guinea-Bissau","🇬🇼","Africa","hard"],["Guyana","🇬🇾","South America","hard"],
+["Haiti","🇭🇹","North America","medium"],["Honduras","🇭🇳","North America","medium"],["Hungary","🇭🇺","Europe","medium"],
+["Iceland","🇮🇸","Europe","easy"],["India","🇮🇳","Asia","easy"],["Indonesia","🇮🇩","Asia","easy"],["Iran","🇮🇷","Asia","medium"],["Iraq","🇮🇶","Asia","medium"],["Ireland","🇮🇪","Europe","easy"],["Israel","🇮🇱","Asia","easy"],["Italy","🇮🇹","Europe","easy"],
+["Jamaica","🇯🇲","North America","easy"],["Japan","🇯🇵","Asia","easy"],["Jordan","🇯🇴","Asia","medium"],
+["Kazakhstan","🇰🇿","Asia","medium"],["Kenya","🇰🇪","Africa","medium"],["Kiribati","🇰🇮","Oceania","hard"],["Kuwait","🇰🇼","Asia","medium"],["Kyrgyzstan","🇰🇬","Asia","hard"],
+["Laos","🇱🇦","Asia","medium"],["Latvia","🇱🇻","Europe","medium"],["Lebanon","🇱🇧","Asia","medium"],["Lesotho","🇱🇸","Africa","hard"],["Liberia","🇱🇷","Africa","hard"],["Libya","🇱🇾","Africa","medium"],["Liechtenstein","🇱🇮","Europe","hard"],["Lithuania","🇱🇹","Europe","medium"],["Luxembourg","🇱🇺","Europe","medium"],
+["Madagascar","🇲🇬","Africa","medium"],["Malawi","🇲🇼","Africa","hard"],["Malaysia","🇲🇾","Asia","medium"],["Maldives","🇲🇻","Asia","medium"],["Mali","🇲🇱","Africa","hard"],["Malta","🇲🇹","Europe","medium"],["Marshall Islands","🇲🇭","Oceania","hard"],["Mauritania","🇲🇷","Africa","hard"],["Mauritius","🇲🇺","Africa","hard"],["Mexico","🇲🇽","North America","easy"],["Micronesia","🇫🇲","Oceania","hard"],["Moldova","🇲🇩","Europe","hard"],["Monaco","🇲🇨","Europe","hard"],["Mongolia","🇲🇳","Asia","medium"],["Montenegro","🇲🇪","Europe","hard"],["Morocco","🇲🇦","Africa","medium"],["Mozambique","🇲🇿","Africa","hard"],["Myanmar","🇲🇲","Asia","medium"],
+["Namibia","🇳🇦","Africa","hard"],["Nauru","🇳🇷","Oceania","hard"],["Nepal","🇳🇵","Asia","easy"],["Netherlands","🇳🇱","Europe","easy"],["New Zealand","🇳🇿","Oceania","easy"],["Nicaragua","🇳🇮","North America","medium"],["Niger","🇳🇪","Africa","hard"],["Nigeria","🇳🇬","Africa","easy"],["North Korea","🇰🇵","Asia","medium"],["North Macedonia","🇲🇰","Europe","hard"],["Norway","🇳🇴","Europe","easy"],
+["Oman","🇴🇲","Asia","medium"],
+["Pakistan","🇵🇰","Asia","easy"],["Palau","🇵🇼","Oceania","hard"],["Panama","🇵🇦","North America","medium"],["Papua New Guinea","🇵🇬","Oceania","hard"],["Paraguay","🇵🇾","South America","medium"],["Peru","🇵🇪","South America","medium"],["Philippines","🇵🇭","Asia","medium"],["Poland","🇵🇱","Europe","easy"],["Portugal","🇵🇹","Europe","easy"],
+["Qatar","🇶🇦","Asia","medium"],
+["Romania","🇷🇴","Europe","medium"],["Rwanda","🇷🇼","Africa","hard"],
+["Saint Kitts and Nevis","🇰🇳","North America","hard"],["Saint Lucia","🇱🇨","North America","hard"],["Saint Vincent and the Grenadines","🇻🇨","North America","hard"],["Samoa","🇼🇸","Oceania","hard"],["San Marino","🇸🇲","Europe","hard"],["Saudi Arabia","🇸🇦","Asia","medium"],["Senegal","🇸🇳","Africa","medium"],["Serbia","🇷🇸","Europe","medium"],["Seychelles","🇸🇨","Africa","hard"],["Sierra Leone","🇸🇱","Africa","hard"],["Singapore","🇸🇬","Asia","easy"],["Slovakia","🇸🇰","Europe","medium"],["Slovenia","🇸🇮","Europe","medium"],["Solomon Islands","🇸🇧","Oceania","hard"],["Somalia","🇸🇴","Africa","hard"],["South Africa","🇿🇦","Africa","easy"],["South Korea","🇰🇷","Asia","easy"],["South Sudan","🇸🇸","Africa","hard"],["Spain","🇪🇸","Europe","easy"],["Sri Lanka","🇱🇰","Asia","medium"],["Sudan","🇸🇩","Africa","medium"],["Suriname","🇸🇷","South America","hard"],["Sweden","🇸🇪","Europe","easy"],["Switzerland","🇨🇭","Europe","easy"],["Syria","🇸🇾","Asia","medium"],
+["Tajikistan","🇹🇯","Asia","hard"],["Tanzania","🇹🇿","Africa","medium"],["Thailand","🇹🇭","Asia","easy"],["Timor-Leste","🇹🇱","Asia","hard"],["Togo","🇹🇬","Africa","hard"],["Tonga","🇹🇴","Oceania","hard"],["Trinidad and Tobago","🇹🇹","North America","hard"],["Tunisia","🇹🇳","Africa","medium"],["Turkey","🇹🇷","Asia","easy"],["Turkmenistan","🇹🇲","Asia","hard"],["Tuvalu","🇹🇻","Oceania","hard"],
+["Uganda","🇺🇬","Africa","medium"],["Ukraine","🇺🇦","Europe","easy"],["United Arab Emirates","🇦🇪","Asia","medium"],["United Kingdom","🇬🇧","Europe","easy"],["United States","🇺🇸","North America","easy"],["Uruguay","🇺🇾","South America","medium"],["Uzbekistan","🇺🇿","Asia","hard"],
+["Vanuatu","🇻🇺","Oceania","hard"],["Vatican City","🇻🇦","Europe","hard"],["Venezuela","🇻🇪","South America","medium"],["Vietnam","🇻🇳","Asia","easy"],
+["Yemen","🇾🇪","Asia","medium"],
+["Zambia","🇿🇲","Africa","medium"],["Zimbabwe","🇿🇼","Africa","medium"]
+].map(([name,flag,region,diff])=>({name,flag,region,diff}));
+
+const els = {
+  flag:document.getElementById("flag"), choices:document.getElementById("choices"),
+  feedback:document.getElementById("feedback"), qnum:document.getElementById("qnum"),
+  score:document.getElementById("score"), streak:document.getElementById("streak"),
+  accuracy:document.getElementById("accuracy"), best:document.getElementById("best"),
+  bar:document.getElementById("bar"), hint:document.getElementById("hint"),
+  review:document.getElementById("review"), next:document.getElementById("nextBtn"),
+  start:document.getElementById("startBtn"), hintBtn:document.getElementById("hintBtn"),
+  clear:document.getElementById("clearBtn"), mode:document.getElementById("modeSelect"),
+  difficulty:document.getElementById("difficultySelect"), region:document.getElementById("regionSelect"),
+  timer:document.getElementById("timerSelect")
+};
+
+let state = {score:0, asked:0, streak:0, current:null, answered:false, length:10, endless:false, pool:[], review:[], timer:null, timeLeft:null};
+let bestKey = "worldFlagsBestV2";
+
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5)}
+function byDifficulty(){
+  const d = els.difficulty.value;
+  if(d === "easy") return DATA.filter(x=>x.diff==="easy");
+  if(d === "medium") return DATA.filter(x=>["easy","medium"].includes(x.diff));
+  if(d === "hard") return DATA.filter(x=>["medium","hard"].includes(x.diff));
+  return DATA;
+}
+function getPool(){
+  let pool = byDifficulty();
+  if(els.region.value !== "All") pool = pool.filter(x=>x.region === els.region.value);
+  if(pool.length < 8) pool = DATA.filter(x=>els.region.value==="All" || x.region===els.region.value);
+  return pool.length ? pool : DATA;
+}
+function bestId(){
+  return `${bestKey}:${els.mode.value}:${els.difficulty.value}:${els.region.value}`;
+}
+function loadBest(){ els.best.textContent = localStorage.getItem(bestId()) || 0; }
+function saveBest(){
+  const old = Number(localStorage.getItem(bestId()) || 0);
+  if(state.score > old) localStorage.setItem(bestId(), state.score);
+  loadBest();
+}
+function reset(){
+  clearInterval(state.timer);
+  state = {score:0, asked:0, streak:0, current:null, answered:false, length:els.mode.value==="endless"?Infinity:Number(els.mode.value), endless:els.mode.value==="endless", pool:getPool(), review:[], timer:null, timeLeft:null};
+  els.review.classList.add("hidden");
+  els.review.innerHTML = "";
+  loadBest();
+  updateStats();
+  newQuestion();
+}
+function updateStats(){
+  els.score.textContent = state.score;
+  els.streak.textContent = state.streak;
+  els.qnum.textContent = state.endless ? state.asked + 1 : Math.min(state.asked + 1, state.length);
+  const acc = state.asked ? Math.round((state.score/state.asked)*100) : 0;
+  els.accuracy.textContent = `${acc}%`;
+  els.bar.style.width = state.endless ? "100%" : `${Math.min(100,(state.asked/state.length)*100)}%`;
+}
+function startTimer(){
+  clearInterval(state.timer);
+  const seconds = els.timer.value === "off" ? null : Number(els.timer.value);
+  state.timeLeft = seconds;
+  if(!seconds){ return; }
+  els.hint.textContent = `Region: ${state.current.region} • Time: ${seconds}s`;
+  state.timer = setInterval(()=>{
+    state.timeLeft--;
+    if(!state.answered) els.hint.textContent = `Region: ${state.current.region} • Time: ${state.timeLeft}s`;
+    if(state.timeLeft <= 0 && !state.answered){
+      clearInterval(state.timer);
+      grade(null);
+    }
+  },1000);
+}
+function newQuestion(){
+  clearInterval(state.timer);
+  state.answered = false;
+  els.feedback.textContent = "";
+  els.feedback.className = "";
+  els.next.classList.add("hidden");
+  state.current = state.pool[Math.floor(Math.random()*state.pool.length)];
+  els.flag.textContent = state.current.flag;
+  els.hint.textContent = "Select the country";
+  const wrongPool = DATA.filter(x=>x.name !== state.current.name);
+  const options = shuffle([state.current, ...shuffle(wrongPool).slice(0,3)]);
+  els.choices.innerHTML = "";
+  options.forEach(opt=>{
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.textContent = opt.name;
+    b.onclick = ()=>grade(opt.name);
+    els.choices.appendChild(b);
+  });
+  updateStats();
+  startTimer();
+}
+function grade(selected){
+  if(state.answered) return;
+  state.answered = true;
+  clearInterval(state.timer);
+  const correct = selected === state.current.name;
+  [...document.querySelectorAll(".choice")].forEach(b=>{
+    if(b.textContent === state.current.name) b.classList.add("correct");
+    if(selected && b.textContent === selected && !correct) b.classList.add("wrong");
+  });
+  state.asked++;
+  if(correct){
+    state.score++;
+    state.streak++;
+    els.feedback.textContent = "Correct!";
+    els.feedback.className = "good";
+  } else {
+    state.streak = 0;
+    els.feedback.textContent = selected ? `Not quite. Correct answer: ${state.current.name}` : `Time's up. Correct answer: ${state.current.name}`;
+    els.feedback.className = "bad";
+  }
+  state.review.push({flag:state.current.flag, correct:state.current.name, selected:selected || "No answer"});
+  saveBest();
+  updateStats();
+  els.hint.textContent = `Region: ${state.current.region} • Difficulty: ${state.current.diff}`;
+  if(!state.endless && state.asked >= state.length) finish();
+  else els.next.classList.remove("hidden");
+}
+function finish(){
+  clearInterval(state.timer);
+  els.flag.textContent = "🏁";
+  els.choices.innerHTML = "";
+  els.next.classList.add("hidden");
+  const acc = Math.round((state.score/state.asked)*100);
+  els.feedback.innerHTML = `Finished! Final score: <strong>${state.score}/${state.asked}</strong> (${acc}%).`;
+  els.feedback.className = acc >= 80 ? "good" : acc >= 60 ? "warn" : "bad";
+  els.bar.style.width = "100%";
+  showReview();
+}
+function showReview(){
+  els.review.classList.remove("hidden");
+  els.review.innerHTML = "<strong>Review</strong>" + state.review.map(r=>`
+    <div class="review-row">
+      <div style="font-size:2rem">${r.flag}</div>
+      <div><b>Correct:</b> ${r.correct}</div>
+      <div class="answer"><b>Your answer:</b> ${r.selected}</div>
+    </div>`).join("");
+}
+function showHint(){
+  if(!state.current || state.answered) return;
+  const first = state.current.name[0];
+  els.hint.textContent = `Hint: ${state.current.region}; starts with "${first}"`;
+}
+els.next.onclick = newQuestion;
+els.start.onclick = reset;
+els.hintBtn.onclick = showHint;
+els.clear.onclick = ()=>{ localStorage.removeItem(bestId()); loadBest(); };
+[els.mode, els.difficulty, els.region].forEach(el=>el.onchange=()=>{loadBest(); reset();});
+loadBest();
+reset();
+</script>
+</body>
+</html>
