@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>World Flags Quiz</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --good: #16a34a;
+    --bad: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .app {
+    width: 100%;
+    max-width: 700px;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.08);
+  }
+  h1 { margin: 0 0 8px; font-size: 2rem; }
+  .sub { color: var(--muted); margin-bottom: 22px; }
+  .top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .pill {
+    background: #eef2ff;
+    color: #1e3a8a;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .flag {
+    font-size: clamp(80px, 22vw, 150px);
+    text-align: center;
+    margin: 16px 0 24px;
+    line-height: 1;
+  }
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  button {
+    border: 0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .06s ease, opacity .2s ease, background .2s ease;
+  }
+  button:hover { transform: translateY(-1px); }
+  .choice { background: #e5e7eb; color: var(--text); }
+  .choice.correct { background: #dcfce7; color: var(--good); }
+  .choice.wrong { background: #fee2e2; color: var(--bad); }
+  .controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .primary { background: var(--accent); color: white; }
+  .secondary { background: #111827; color: white; }
+  .ghost { background: #e5e7eb; }
+  #feedback {
+    margin-top: 18px;
+    min-height: 28px;
+    font-weight: 800;
+  }
+  .good { color: var(--good); }
+  .bad { color: var(--bad); }
+  .hidden { display: none; }
+  @media (max-width: 560px) {
+    .choices { grid-template-columns: 1fr; }
+    .app { padding: 22px; }
+  }
+</style>
+</head>
+<body>
+  <main class="app">
+    <h1>World Flags Quiz</h1>
+    <div class="sub">Guess the nation from its flag. All questions run locally in this one file.</div>
+
+    <div class="top">
+      <div class="pill">Question <span id="qnum">1</span>/<span id="total">10</span></div>
+      <div class="pill">Score: <span id="score">0</span></div>
+      <div class="pill">Mode: <span id="mode">10 questions</span></div>
+    </div>
+
+    <div id="flag" class="flag">🇯🇵</div>
+    <div id="choices" class="choices"></div>
+    <div id="feedback"></div>
+
+    <div class="controls">
+      <button id="nextBtn" class="primary hidden">Next</button>
+      <button id="restartBtn" class="secondary">Restart</button>
+      <button id="toggleBtn" class="ghost">Switch to endless</button>
+    </div>
+  </main>
+
+<script>
+const countries = [
+  ["Afghanistan","🇦🇫"],["Albania","🇦🇱"],["Algeria","🇩🇿"],["Andorra","🇦🇩"],["Angola","🇦🇴"],
+  ["Argentina","🇦🇷"],["Armenia","🇦🇲"],["Australia","🇦🇺"],["Austria","🇦🇹"],["Azerbaijan","🇦🇿"],
+  ["Bahamas","🇧🇸"],["Bahrain","🇧🇭"],["Bangladesh","🇧🇩"],["Barbados","🇧🇧"],["Belgium","🇧🇪"],
+  ["Belize","🇧🇿"],["Benin","🇧🇯"],["Bhutan","🇧🇹"],["Bolivia","🇧🇴"],["Bosnia and Herzegovina","🇧🇦"],
+  ["Botswana","🇧🇼"],["Brazil","🇧🇷"],["Brunei","🇧🇳"],["Bulgaria","🇧🇬"],["Burkina Faso","🇧🇫"],
+  ["Burundi","🇧🇮"],["Cambodia","🇰🇭"],["Cameroon","🇨🇲"],["Canada","🇨🇦"],["Chad","🇹🇩"],
+  ["Chile","🇨🇱"],["China","🇨🇳"],["Colombia","🇨🇴"],["Costa Rica","🇨🇷"],["Croatia","🇭🇷"],
+  ["Cuba","🇨🇺"],["Cyprus","🇨🇾"],["Czechia","🇨🇿"],["Denmark","🇩🇰"],["Dominican Republic","🇩🇴"],
+  ["Ecuador","🇪🇨"],["Egypt","🇪🇬"],["El Salvador","🇸🇻"],["Estonia","🇪🇪"],["Ethiopia","🇪🇹"],
+  ["Finland","🇫🇮"],["France","🇫🇷"],["Georgia","🇬🇪"],["Germany","🇩🇪"],["Ghana","🇬🇭"],
+  ["Greece","🇬🇷"],["Guatemala","🇬🇹"],["Haiti","🇭🇹"],["Honduras","🇭🇳"],["Hungary","🇭🇺"],
+  ["Iceland","🇮🇸"],["India","🇮🇳"],["Indonesia","🇮🇩"],["Iran","🇮🇷"],["Iraq","🇮🇶"],
+  ["Ireland","🇮🇪"],["Israel","🇮🇱"],["Italy","🇮🇹"],["Jamaica","🇯🇲"],["Japan","🇯🇵"],
+  ["Jordan","🇯🇴"],["Kazakhstan","🇰🇿"],["Kenya","🇰🇪"],["Kuwait","🇰🇼"],["Latvia","🇱🇻"],
+  ["Lebanon","🇱🇧"],["Libya","🇱🇾"],["Lithuania","🇱🇹"],["Luxembourg","🇱🇺"],["Madagascar","🇲🇬"],
+  ["Malaysia","🇲🇾"],["Maldives","🇲🇻"],["Mali","🇲🇱"],["Malta","🇲🇹"],["Mexico","🇲🇽"],
+  ["Moldova","🇲🇩"],["Monaco","🇲🇨"],["Mongolia","🇲🇳"],["Montenegro","🇲🇪"],["Morocco","🇲🇦"],
+  ["Nepal","🇳🇵"],["Netherlands","🇳🇱"],["New Zealand","🇳🇿"],["Nicaragua","🇳🇮"],["Nigeria","🇳🇬"],
+  ["North Macedonia","🇲🇰"],["Norway","🇳🇴"],["Oman","🇴🇲"],["Pakistan","🇵🇰"],["Panama","🇵🇦"],
+  ["Paraguay","🇵🇾"],["Peru","🇵🇪"],["Philippines","🇵🇭"],["Poland","🇵🇱"],["Portugal","🇵🇹"],
+  ["Qatar","🇶🇦"],["Romania","🇷🇴"],["Rwanda","🇷🇼"],["Saudi Arabia","🇸🇦"],["Senegal","🇸🇳"],
+  ["Serbia","🇷🇸"],["Singapore","🇸🇬"],["Slovakia","🇸🇰"],["Slovenia","🇸🇮"],["South Africa","🇿🇦"],
+  ["South Korea","🇰🇷"],["Spain","🇪🇸"],["Sri Lanka","🇱🇰"],["Sweden","🇸🇪"],["Switzerland","🇨🇭"],
+  ["Thailand","🇹🇭"],["Tunisia","🇹🇳"],["Turkey","🇹🇷"],["Ukraine","🇺🇦"],["United Arab Emirates","🇦🇪"],
+  ["United Kingdom","🇬🇧"],["United States","🇺🇸"],["Uruguay","🇺🇾"],["Venezuela","🇻🇪"],["Vietnam","🇻🇳"],
+  ["Yemen","🇾🇪"],["Zambia","🇿🇲"],["Zimbabwe","🇿🇼"]
+];
+
+let score = 0;
+let qIndex = 0;
+let quizLength = 10;
+let endless = false;
+let current = null;
+let answered = false;
+
+const flagEl = document.getElementById("flag");
+const choicesEl = document.getElementById("choices");
+const feedbackEl = document.getElementById("feedback");
+const scoreEl = document.getElementById("score");
+const qnumEl = document.getElementById("qnum");
+const totalEl = document.getElementById("total");
+const nextBtn = document.getElementById("nextBtn");
+const restartBtn = document.getElementById("restartBtn");
+const toggleBtn = document.getElementById("toggleBtn");
+const modeEl = document.getElementById("mode");
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function newQuestion() {
+  answered = false;
+  feedbackEl.textContent = "";
+  feedbackEl.className = "";
+  nextBtn.classList.add("hidden");
+
+  current = countries[Math.floor(Math.random() * countries.length)];
+  flagEl.textContent = current[1];
+
+  const wrong = shuffle(countries.filter(c => c[0] !== current[0])).slice(0, 3);
+  const options = shuffle([current, ...wrong]);
+
+  choicesEl.innerHTML = "";
+  options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = option[0];
+    btn.onclick = () => answer(btn, option[0]);
+    choicesEl.appendChild(btn);
+  });
+
+  qnumEl.textContent = endless ? qIndex + 1 : Math.min(qIndex + 1, quizLength);
+  totalEl.textContent = endless ? "∞" : quizLength;
+  scoreEl.textContent = score;
+}
+
+function answer(btn, selected) {
+  if (answered) return;
+  answered = true;
+
+  const buttons = [...document.querySelectorAll(".choice")];
+  buttons.forEach(b => {
+    if (b.textContent === current[0]) b.classList.add("correct");
+  });
+
+  if (selected === current[0]) {
+    score++;
+    feedbackEl.textContent = "Correct!";
+    feedbackEl.className = "good";
+  } else {
+    btn.classList.add("wrong");
+    feedbackEl.textContent = `Not quite. Correct answer: ${current[0]}`;
+    feedbackEl.className = "bad";
+  }
+
+  scoreEl.textContent = score;
+  nextBtn.classList.remove("hidden");
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (!endless && qIndex >= quizLength) {
+    flagEl.textContent = "🏁";
+    choicesEl.innerHTML = "";
+    feedbackEl.className = "";
+    feedbackEl.innerHTML = `Finished! Final score: <strong>${score}/${quizLength}</strong>`;
+    nextBtn.classList.add("hidden");
+    return;
+  }
+  newQuestion();
+}
+
+function restart() {
+  score = 0;
+  qIndex = 0;
+  newQuestion();
+}
+
+function toggleMode() {
+  endless = !endless;
+  modeEl.textContent = endless ? "endless" : "10 questions";
+  toggleBtn.textContent = endless ? "Switch to 10 questions" : "Switch to endless";
+  restart();
+}
+
+nextBtn.onclick = nextQuestion;
+restartBtn.onclick = restart;
+toggleBtn.onclick = toggleMode;
+
+newQuestion();
+</script>
+</body>
+</html>
